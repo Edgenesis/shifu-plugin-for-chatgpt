@@ -1,0 +1,18 @@
+{
+    "schema_version": "v1",
+    "name_for_human": "Shifu Plugin",
+    "name_for_model": "shifu",
+    "description_for_human": "Plugin for Shifu, a plugin allows ChatGPT to interact with the physical world via IoT devices.",
+    "description_for_model": "Plugin for Shifu, a plugin allows ChatGPT to interact with an IP camera",
+    "auth": {
+        "type": "none"
+    },
+    "api": {
+        "type": "openapi",
+        "url": "http://localhost:3333/openapi.yaml",
+        "is_user_authenticated": false
+    },
+    "logo_url": "http://localhost:3333/logo.png",
+    "contact_email": "yc@edgenesis.com",
+    "legal_info_url": "https://github.com/Edgenesis/shifu"
+}

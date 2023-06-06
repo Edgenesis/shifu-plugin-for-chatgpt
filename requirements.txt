@@ -1,0 +1,4 @@
+quart
+quart_cors
+aiohttp
+Pillow

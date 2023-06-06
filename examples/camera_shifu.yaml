@@ -1,0 +1,120 @@
+---
+# Source: shifu_chart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deviceshifu-camera-configmap
+  namespace: deviceshifu
+data:
+  driverProperties: |
+    driverImage: "defaultImage"
+    driverSku: "Hello"
+  instructions: |
+    instructionSettings:
+      defaultTimeoutSeconds: -1
+    instructions:
+      "capture":
+      "info":
+      "move/down":
+      "move/left":
+      "move/right":
+      "move/up":
+      "stream":
+  telemetries: |
+    telemetrySettings:
+      telemetryUpdateIntervalInMilliseconds: 6000
+    telemetries:
+---
+# Source: shifu_chart/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: deviceshifu-camera-deployment
+  name: deviceshifu-camera-service
+  namespace: deviceshifu
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: deviceshifu-camera-deployment
+  type: LoadBalancer
+---
+# Source: shifu_chart/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: deviceshifu-camera-deployment
+  name: deviceshifu-camera-deployment
+  namespace: deviceshifu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deviceshifu-camera-deployment
+  template:
+    metadata:
+      labels:
+        app: deviceshifu-camera-deployment
+    spec:
+      containers:
+        - image: edgehub/deviceshifu-http-http:v0.16.0
+          name: deviceimg
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: deviceshifu-config
+              mountPath: "/etc/edgedevice/config"
+              readOnly: true
+          env:
+            - name: EDGEDEVICE_NAME
+              value: edgedevice-camera
+            - name: EDGEDEVICE_NAMESPACE
+              value: devices
+        - image: edgenesis/camera-python:v0.0.5
+          name: camera-python
+          ports:
+            - containerPort: 11112
+          env:
+            - name: EDGEDEVICE_NAME
+              value: "edgedevice-camera"
+            - name: EDGEDEVICE_NAMESPACE
+              value: "devices"
+            - name: IP_CAMERA_ADDRESS
+              value: "bj-hikcamera-01.saifai.cn"
+            - name: IP_CAMERA_CONTAINER_PORT
+              value: "11112"
+            - name: IP_CAMERA_HTTP_PORT
+              value: "41080"
+            - name: IP_CAMERA_PASSWORD
+              value: "HelloShifu"
+            - name: IP_CAMERA_RTSP_PORT
+              value: "41554"
+            - name: IP_CAMERA_USERNAME
+              value: "guest"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+      volumes:
+        - name: deviceshifu-config
+          configMap:
+            name: deviceshifu-camera-configmap
+      serviceAccountName: edgedevice-sa
+---
+# Source: shifu_chart/templates/edgedevice.yaml
+apiVersion: shifu.edgenesis.io/v1alpha1
+kind: EdgeDevice
+metadata:
+  name: edgedevice-camera
+  namespace: devices
+spec:
+  sku: "model"
+  connection: Ethernet
+  address: "localhost:11112"
+  protocol: HTTP
+  customMetadata:
+    "description": "description"
+    "paas_device_id": "device_404306e8-e2fb-51aa-c9e9-216407e09207"
+    "vendor": "HikVision"
