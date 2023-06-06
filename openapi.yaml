@@ -1,0 +1,107 @@
+openapi: 3.0.1
+info:
+  title: IP Camera Control API
+  description: API to access and control an IP camera, allowing users to view the camera feed, move the camera in various directions, and get information about the camera.
+  version: 1.0.0
+servers:
+  - url: "http://localhost:3333"
+paths:
+  /capture:
+    get:
+      operationId: captureFrame
+      summary: Capture a single frame from the IP camera
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapturedImage'
+        "400":
+          description: Cannot capture frame from the camera
+
+  /image/{image_name}:
+    get:
+      operationId: serveImage
+      summary: Retrieve the saved image from the server
+      parameters:
+        - in: path
+          name: image_name
+          required: true
+          schema:
+            type: string
+          description: The file name of the captured image.
+      responses:
+        "200":
+          description: OK
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Image not found
+
+  /info:
+    get:
+      operationId: getCameraInfo
+      summary: Get IP camera information
+      responses:
+        "200":
+          description: OK
+          content:
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/CameraInfo'
+        "400":
+          description: All authentication failed for the device
+
+  /stream:
+    get:
+      operationId: streamVideo
+      summary: Stream live video from the IP camera
+      responses:
+        "200":
+          description: OK
+          content:
+            multipart/x-mixed-replace:
+              schema:
+                $ref: '#/components/schemas/VideoStream'
+
+  /move/{direction}:
+    get:
+      operationId: moveCamera
+      summary: Move the IP camera in a specified direction
+      parameters:
+        - in: path
+          name: direction
+          required: true
+          schema:
+            type: string
+            enum:
+              - up
+              - down
+              - left
+              - right
+          description: The direction to move the camera (up, down, left, or right).
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Cannot move camera or invalid direction specified
+
+components:
+  schemas:
+    CapturedImage:
+      type: object
+      properties:
+        imageUrl:
+          type: string
+          description: The URL of the captured image.
+    CameraInfo:
+      type: string
+      description: XML-formatted information about the IP camera.
+    VideoStream:
+      type: string
+      format: binary
+      description: A live video stream from the IP camera in multipart/x-mixed-replace format.
